@@ -419,17 +419,24 @@ export default function LandingPage({ role, user }: LandingPageProps) {
         acc[key].submissions.push(sub)
         return acc
       }, {})
-    const reportData = Object.values(groupedSubmissions).map((group: any) => {
-      const student = (students || []).find((s: any) => s.uid === group.student_uid)
-      const approval = (approvals || []).find((a: any) => a.student_uid === group.student_uid && a.class === group.class)
-      return {
-        uid: group.student_uid,
-        name: student?.name || group.student_uid,
-        status: approval?.approval_status || 'Pending',
-        marks: approval?.marks_allotted || 0,
-        credits: approval?.credits_allotted || 0
-      }
-    })
+    const reportData = Object.values(groupedSubmissions)
+      .map((group: any) => {
+        const student = (students || []).find((s: any) => s.uid === group.student_uid)
+        const approval = (approvals || []).find((a: any) => a.student_uid === group.student_uid && a.class === group.class)
+        return {
+          uid: group.student_uid,
+          name: student?.name || group.student_uid,
+          status: approval?.approval_status || 'Pending',
+          marks: approval?.marks_allotted || 0,
+          credits: approval?.credits_allotted || 0
+        }
+      })
+      .sort((a, b) => {
+        // Extract last 2 digits from UID and sort numerically
+        const aLastDigits = parseInt(a.uid.slice(-2)) || 0
+        const bLastDigits = parseInt(b.uid.slice(-2)) || 0
+        return aLastDigits - bLastDigits
+      })
     exportFPReport(reportData)
   }
 
@@ -510,6 +517,13 @@ export default function LandingPage({ role, user }: LandingPageProps) {
       row.push(totalPoints)
       rows.push(row)
     }
+    rows.sort((a, b) => {
+      if (a === header) return -1
+      if (b === header) return 1
+      const aLastDigits = parseInt(a[0].slice(-2)) || 0
+      const bLastDigits = parseInt(b[0].slice(-2)) || 0
+      return aLastDigits - bLastDigits
+    })
     exportAttendanceSheet(rows, `${selectedClass} Attendance`, `attendance_${selectedClass}.xlsx`)
   }
 
@@ -650,15 +664,15 @@ export default function LandingPage({ role, user }: LandingPageProps) {
           {/* Segment 2: Download Buttons */}
           <Card style={{ marginBottom: 32, padding: 24, textAlign: 'center' }}>
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-              <button onClick={exportFieldProjectReport} style={{ padding: '10px 20px', background: colors.primary, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-                Download Field Project Report
-              </button>
-              <button onClick={exportCEPReportLanding} style={{ padding: '10px 20px', background: colors.success, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-                Download CEP Report
-              </button>
-              <button onClick={exportAttendanceReportLanding} style={{ padding: '10px 20px', background: colors.primary, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-                Download Attendance Report
-              </button>
+          <button onClick={exportFieldProjectReport} style={{ padding: '10px 20px', background: colors.primary, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+            Download Field Project Report
+          </button>
+          <button onClick={exportCEPReportLanding} style={{ padding: '10px 20px', background: colors.success, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+            Download CEP Report
+          </button>
+          <button onClick={exportAttendanceReportLanding} style={{ padding: '10px 20px', background: colors.primary, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+            Download Attendance Report
+          </button>
             </div>
           </Card>
 
