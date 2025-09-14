@@ -68,9 +68,6 @@ export default function CommunityEngagement({ role }: CommunityEngagementProps) 
     name: ''
   })
 
-  const [previewOpen, setPreviewOpen] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState('')
-  const [previewTitle, setPreviewTitle] = useState('')
   const [evaluationModal, setEvaluationModal] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<{ uid: string; name: string; class: string } | null>(null)
   const [evaluationData, setEvaluationData] = useState({
@@ -83,30 +80,26 @@ export default function CommunityEngagement({ role }: CommunityEngagementProps) 
 
   const getPublicHref = (rawUrl: string | undefined | null) => (!rawUrl ? '' : rawUrl.trim().replace(/^@+/, ''))
 
-const extractStoragePathFromPublicUrl = (url: string) => {
-  try {
-    const clean = getPublicHref(url)
-    const u = new URL(clean)
-    const prefix = '/storage/v1/object/public/'
-    const idx = u.pathname.indexOf(prefix)
-    if (idx === -1) return ''
-    // remove only the leading "/storage/v1/object/public/student-submissions/"
-    const remainder = u.pathname.substring(idx + prefix.length)
-    // remainder is now "student-submissions/field_project/..."
-    const bucketPrefix = 'student-submissions/'
-    if (!remainder.startsWith(bucketPrefix)) return ''
-    return remainder.substring(bucketPrefix.length) // ✅ correct relative path
-  } catch {
-    return ''
+  const extractStoragePathFromPublicUrl = (url: string) => {
+    try {
+      const clean = getPublicHref(url)
+      const u = new URL(clean)
+      const prefix = '/storage/v1/object/public/'
+      const idx = u.pathname.indexOf(prefix)
+      if (idx === -1) return ''
+      const remainder = u.pathname.substring(idx + prefix.length)
+      const bucketPrefix = 'student-submissions/'
+      if (!remainder.startsWith(bucketPrefix)) return ''
+      return remainder.substring(bucketPrefix.length)
+    } catch {
+      return ''
+    }
   }
-}
-
 
   const resolveSignedOrPublic = async (publicUrl: string) => {
     const path = extractStoragePathFromPublicUrl(publicUrl)
     if (!path) return getPublicHref(publicUrl)
     try {
-      // Use the same bucket logic as upload for retrieval
       const { data } = await supabase.storage.from('student-submissions').createSignedUrl(path, 120)
       return data?.signedUrl || getPublicHref(publicUrl)
     } catch {
@@ -114,17 +107,12 @@ const extractStoragePathFromPublicUrl = (url: string) => {
     }
   }
 
-  const openPreview = async (title: string, publicUrl: string) => {
-    const resolved = await resolveSignedOrPublic(publicUrl)
-    window.open(resolved, '_blank')
-  }
-
   useEffect(() => {
     fetchRequirements()
     if (role === 'student') {
       fetchStudentSubmissions()
       fetchStudentApproval()
-    } else { 
+    } else {
       fetchAllSubmissions()
       fetchStudents()
       fetchAllApprovals()
@@ -183,12 +171,10 @@ const extractStoragePathFromPublicUrl = (url: string) => {
       .select('uid, name, class')
       .order('class', { ascending: true })
     if (!error) {
-      // Sort by class first, then by last 2 digits of UID
       const sortedStudents = (data || []).sort((a, b) => {
         if (a.class !== b.class) {
           return a.class.localeCompare(b.class)
         }
-        // Extract last 2 digits from UID and sort numerically
         const aLastDigits = parseInt(a.uid.slice(-2)) || 0
         const bLastDigits = parseInt(b.uid.slice(-2)) || 0
         return aLastDigits - bLastDigits
@@ -204,8 +190,8 @@ const extractStoragePathFromPublicUrl = (url: string) => {
     if (editingRequirementId) {
       const res = await supabase
         .from('cep_requirements')
-        .update({ 
-          teacher_employee_code: user.id, 
+        .update({
+          teacher_employee_code: user.id,
           ...newRequirement,
           credits_config: newRequirement.credits_config
         })
@@ -214,8 +200,8 @@ const extractStoragePathFromPublicUrl = (url: string) => {
     } else {
       const res = await supabase
         .from('cep_requirements')
-        .insert([{ 
-          teacher_employee_code: user.id, 
+        .insert([{
+          teacher_employee_code: user.id,
           ...newRequirement,
           credits_config: newRequirement.credits_config
         }])
@@ -230,9 +216,9 @@ const extractStoragePathFromPublicUrl = (url: string) => {
   }
 
   const handleEditRequirement = (req: CEPRequirement) => {
-    setNewRequirement({ 
-      assigned_class: req.assigned_class, 
-      minimum_hours: req.minimum_hours, 
+    setNewRequirement({
+      assigned_class: req.assigned_class,
+      minimum_hours: req.minimum_hours,
       deadline: req.deadline,
       credits_config: req.credits_config || []
     })
@@ -263,7 +249,7 @@ const extractStoragePathFromPublicUrl = (url: string) => {
   const updateCreditsCondition = (index: number, field: 'hours' | 'credits', value: number) => {
     setNewRequirement(prev => ({
       ...prev,
-      credits_config: prev.credits_config.map((condition, i) => 
+      credits_config: prev.credits_config.map((condition, i) =>
         i === index ? { ...condition, [field]: value } : condition
       )
     }))
@@ -273,7 +259,6 @@ const extractStoragePathFromPublicUrl = (url: string) => {
     e.preventDefault()
     if (!newSubmission.certificate_file || !newSubmission.picture_file) return
 
-    // Check deadline restriction
     const requirement = getRequirementForStudent()
     if (requirement) {
       const deadline = new Date(requirement.deadline)
@@ -297,10 +282,10 @@ const extractStoragePathFromPublicUrl = (url: string) => {
       const { data: { publicUrl: picUrl } } = supabase.storage.from('student-submissions').getPublicUrl(picPath)
       let geolocation = ''
       if (navigator.geolocation) {
-        await new Promise((resolve) => {
+        geolocation = await new Promise<string>((resolve) => {
           navigator.geolocation.getCurrentPosition(
-            (position) => { geolocation = `${position.coords.latitude},${position.coords.longitude}`; resolve(null) },
-            () => resolve(null)
+            (position) => resolve(`${position.coords.latitude},${position.coords.longitude}`),
+            () => resolve('')
           )
         })
       }
@@ -506,8 +491,8 @@ const generateExcelReport = () => {
   if (role === 'teacher') {
     return (
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h1 style={{ fontSize: 28, color: colors.text }}>Community Engagement Program</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Community Engagement Program</h1>
           <Button variant="success" onClick={generateExcelReport}>Download Excel Report</Button>
         </div>
 
@@ -522,7 +507,7 @@ const generateExcelReport = () => {
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
                   <div>
                     <label>Class</label>
-                    <select value={newRequirement.assigned_class} onChange={(e) => setNewRequirement({ ...newRequirement, assigned_class: e.target.value })} required style={{ padding: 8, border: `1px solid ${colors.border}`, borderRadius: 8 }}>
+                    <select value={newRequirement.assigned_class} onChange={(e) => setNewRequirement({ ...newRequirement, assigned_class: e.target.value })} required style={{ padding: 8, border: '1px solid var(--border)', borderRadius: 8 }}>
                       <option value="">Select Class</option>
                       <option value="FYIT">FYIT</option>
                       <option value="FYSD">FYSD</option>
@@ -532,11 +517,11 @@ const generateExcelReport = () => {
                   </div>
                   <div>
                     <label>Minimum Hours</label>
-                    <input type="number" value={newRequirement.minimum_hours} onChange={(e) => setNewRequirement({ ...newRequirement, minimum_hours: parseInt(e.target.value) })} required style={{ padding: 8, border: `1px solid ${colors.border}`, borderRadius: 8 }} />
+                    <input type="number" value={newRequirement.minimum_hours} onChange={(e) => setNewRequirement({ ...newRequirement, minimum_hours: parseInt(e.target.value) })} required style={{ padding: 8, border: '1px solid var(--border)', borderRadius: 8 }} />
                   </div>
                   <div>
                     <label>Deadline</label>
-                    <input type="date" value={newRequirement.deadline} onChange={(e) => setNewRequirement({ ...newRequirement, deadline: e.target.value })} required style={{ padding: 8, border: `1px solid ${colors.border}`, borderRadius: 8 }} />
+                    <input type="date" value={newRequirement.deadline} onChange={(e) => setNewRequirement({ ...newRequirement, deadline: e.target.value })} required style={{ padding: 8, border: '1px solid var(--border)', borderRadius: 8 }} />
                   </div>
                 </div>
                 
@@ -550,7 +535,7 @@ const generateExcelReport = () => {
                           placeholder="Hours"
                           value={condition.hours}
                           onChange={(e) => updateCreditsCondition(index, 'hours', parseInt(e.target.value) || 0)}
-                          style={{ padding: 8, border: `1px solid ${colors.border}`, borderRadius: 8, width: 100 }}
+                          style={{ padding: 8, border: '1px solid var(--border)', borderRadius: 8, width: 100 }}
                         />
                         <span>hours =</span>
                         <input
@@ -558,7 +543,7 @@ const generateExcelReport = () => {
                           placeholder="Credits"
                           value={condition.credits}
                           onChange={(e) => updateCreditsCondition(index, 'credits', parseInt(e.target.value) || 0)}
-                          style={{ padding: 8, border: `1px solid ${colors.border}`, borderRadius: 8, width: 100 }}
+                          style={{ padding: 8, border: '1px solid var(--border)', borderRadius: 8, width: 100 }}
                         />
                         <span>credits</span>
                         <Button variant="danger" onClick={() => removeCreditsCondition(index)} style={{ padding: '4px 8px', fontSize: 12 }}>Remove</Button>
@@ -751,18 +736,6 @@ const generateExcelReport = () => {
             </div>
           </div>
         </Modal>
-
-        <Modal open={previewOpen} onClose={() => setPreviewOpen(false)} title={previewTitle} noScroll>
-          {previewUrl.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={previewUrl} alt={previewTitle} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-            </div>
-          ) : previewUrl.match(/\.(mp4|webm|ogg)$/i) ? (
-            <video controls style={{ width: '100%', height: 'auto' }} src={previewUrl} />
-          ) : (
-            <iframe title="preview" src={previewUrl} style={{ width: '100%', height: '70vh', border: 'none' }} />
-          )}
-        </Modal>
       </div>
     )
   }
@@ -774,8 +747,8 @@ const generateExcelReport = () => {
   const studentApproval = approvals[0]
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: 20 }}>
-      <h1 style={{ fontSize: 28, marginBottom: 20, color: colors.text }}>Community Engagement Program</h1>
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px' }}>
+      <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 24, color: colors.text, marginTop: 0 }}>Community Engagement Program</h1>
 
       {requirement && (
         <Card style={{ padding: 20 }}>
@@ -880,18 +853,6 @@ const generateExcelReport = () => {
           </Card>
         ))}
       </Section>
-
-      <Modal open={previewOpen} onClose={() => setPreviewOpen(false)} title={previewTitle} noScroll>
-        {previewUrl.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={previewUrl} alt={previewTitle} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-          </div>
-        ) : previewUrl.match(/\.(mp4|webm|ogg)$/i) ? (
-          <video controls style={{ width: '100%', height: 'auto' }} src={previewUrl} />
-        ) : (
-          <iframe title="preview" src={previewUrl} style={{ width: '100%', height: '70vh', border: 'none' }} />
-        )}
-      </Modal>
     </div>
   )
 }

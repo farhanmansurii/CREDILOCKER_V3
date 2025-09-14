@@ -2,7 +2,7 @@ import React from 'react'
 import { UserRole, User, Student } from '../types'
 import { supabase } from '../lib/supabase'
 import { Card, Section, colors } from './UI'
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid, Legend } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,CartesianGrid } from 'recharts'
 import { exportAttendanceReport as exportAttendanceSheet, exportCEPReport, exportFPReport } from '../lib/excelExport'
 
 interface LandingPageProps {
@@ -533,10 +533,10 @@ export default function LandingPage({ role, user }: LandingPageProps) {
   const COLORS = [colors.success, colors.danger]
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 20px' }}>
+  <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 20px' }}>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 28, marginBottom: 8, color: colors.text }}>Welcome to CrediLocker</h1>
-        <p style={{ color: colors.subtleText, fontSize: 16 }}>Track your academic achievements</p>
+        <h1 style={{ fontSize: 28, marginBottom: 8, color: 'var(--text)' }}>Welcome to CrediLocker</h1>
+        <p style={{ color: 'var(--subtle-text)', fontSize: 16 }}>Track your academic achievements</p>
       </div>
       <Section title="Dashboard">
         {role === 'student' ? (
@@ -546,31 +546,31 @@ export default function LandingPage({ role, user }: LandingPageProps) {
               <Card>
                 <div>
                   <div style={{ fontWeight: 600, marginBottom: 6 }}>Co-Curricular Activities</div>
-                  <div style={{ fontSize: 14, color: colors.subtleText }}>Upcoming Activities</div>
+                  <div style={{ fontSize: 14, color: 'var(--subtle-text)' }}>Upcoming Activities</div>
                 </div>
-                <div style={{ fontSize: 22, color: colors.primary, fontWeight: 700 }}>{upcomingCCCount}</div>
-                <div style={{ fontSize: 12, color: colors.subtleText, marginTop: 6 }}>
+                <div style={{ fontSize: 22, color: 'var(--primary)', fontWeight: 700 }}>{upcomingCCCount}</div>
+                <div style={{ fontSize: 12, color: 'var(--subtle-text)', marginTop: 6 }}>
                   Activities assigned to your class
                 </div>
               </Card>
               <Card>
                 <div>
                   <div style={{ fontWeight: 600, marginBottom: 6 }}>Attendance Percentage</div>
-                  <div style={{ fontSize: 14, color: colors.subtleText }}>Overall Attendance</div>
+                  <div style={{ fontSize: 14, color: 'var(--subtle-text)' }}>Overall Attendance</div>
                 </div>
                 {(() => {
                   const total = attendanceStats.present + attendanceStats.absent
                   const pct = total > 0 ? Math.round((attendanceStats.present / total) * 100) : 0
                   return (
                     <div style={{ marginTop: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: colors.subtleText, marginBottom: 6 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--subtle-text)', marginBottom: 6 }}>
                         <span>{attendanceStats.present} present</span>
                         <span>{total} total</span>
                       </div>
-                      <div style={{ backgroundColor: '#e9ecef', borderRadius: 999, height: 12 }}>
-                        <div style={{ backgroundColor: pct >= 75 ? colors.success : pct >= 50 ? colors.warning : colors.danger, height: '100%', borderRadius: 999, width: `${pct}%`, transition: 'width 0.3s' }} />
+                      <div style={{ backgroundColor: 'var(--surface)', borderRadius: 999, height: 12 }}>
+                        <div style={{ backgroundColor: pct >= 75 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)', height: '100%', borderRadius: 999, width: `${pct}%`, transition: 'width 0.3s' }} />
                       </div>
-                      <div style={{ marginTop: 8, fontWeight: 700, color: colors.text, fontSize: 18 }}>{pct}%</div>
+                      <div style={{ marginTop: 8, fontWeight: 700, color: 'var(--text)', fontSize: 18 }}>{pct}%</div>
                     </div>
                   )
                 })()}
@@ -582,9 +582,9 @@ export default function LandingPage({ role, user }: LandingPageProps) {
               <Card>
                 <div>
                   <div style={{ fontWeight: 600, marginBottom: 6 }}>Field Project</div>
-                  <div style={{ fontSize: 14, color: colors.subtleText }}>Uploads</div>
+                  <div style={{ fontSize: 14, color: 'var(--subtle-text)' }}>Uploads</div>
                 </div>
-                <div style={{ fontSize: 12, color: colors.subtleText }}>
+                <div style={{ fontSize: 12, color: 'var(--subtle-text)' }}>
                   Completion Letter: {fieldCounts['completion_letter'] || 0}<br />
                   Outcome Form: {fieldCounts['outcome_form'] || 0}<br />
                   Feedback Form: {fieldCounts['feedback_form'] || 0}<br />
@@ -594,28 +594,28 @@ export default function LandingPage({ role, user }: LandingPageProps) {
               <Card>
                 <div>
                   <div style={{ fontWeight: 600, marginBottom: 6 }}>Co-Curricular</div>
-                  <div style={{ fontSize: 14, color: colors.subtleText }}>Upcoming Activities</div>
+                  <div style={{ fontSize: 14, color: 'var(--subtle-text)' }}>Upcoming Activities</div>
                 </div>
-                <div style={{ fontSize: 22, color: colors.primary, fontWeight: 700 }}>{upcomingCCCount}</div>
+                <div style={{ fontSize: 22, color: 'var(--primary)', fontWeight: 700 }}>{upcomingCCCount}</div>
               </Card>
               <Card>
                 <div>
                   <div style={{ fontWeight: 600, marginBottom: 6 }}>Attendance</div>
-                  <div style={{ fontSize: 14, color: colors.subtleText }}>Present percentage</div>
+                  <div style={{ fontSize: 14, color: 'var(--subtle-text)' }}>Present percentage</div>
                 </div>
                 {(() => {
                   const total = attendanceStats.present + attendanceStats.absent
                   const pct = total > 0 ? Math.round((attendanceStats.present / total) * 100) : 0
                   return (
                     <div style={{ marginTop: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: colors.subtleText, marginBottom: 6 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--subtle-text)', marginBottom: 6 }}>
                         <span>{attendanceStats.present} present</span>
                         <span>{total} total</span>
                       </div>
-                      <div style={{ backgroundColor: '#e9ecef', borderRadius: 999, height: 10 }}>
-                        <div style={{ backgroundColor: colors.success, height: '100%', borderRadius: 999, width: `${pct}%`, transition: 'width 0.3s' }} />
+                      <div style={{ backgroundColor: 'var(--surface)', borderRadius: 999, height: 10 }}>
+                        <div style={{ backgroundColor: 'var(--success)', height: '100%', borderRadius: 999, width: `${pct}%`, transition: 'width 0.3s' }} />
                       </div>
-                      <div style={{ marginTop: 6, fontWeight: 700, color: colors.text }}>{pct}%</div>
+                      <div style={{ marginTop: 6, fontWeight: 700, color: 'var(--text)' }}>{pct}%</div>
                     </div>
                   )
                 })()}
@@ -624,14 +624,14 @@ export default function LandingPage({ role, user }: LandingPageProps) {
                 <div style={{ fontWeight: 600, marginBottom: 6 }}>CEP</div>
                 {cepRequirement ? (
                   <>
-                    <div style={{ fontSize: 13, color: colors.subtleText, marginBottom: 6 }}>Required Hours: {cepRequirement.minimum_hours}</div>
-                    <div style={{ backgroundColor: '#e9ecef', borderRadius: 8, height: 10, marginBottom: 6 }}>
-                      <div style={{ backgroundColor: cepProgress >= 100 ? colors.success : colors.primary, height: '100%', borderRadius: 8, width: `${cepProgress}%`, transition: 'width 0.3s' }}></div>
+                    <div style={{ fontSize: 13, color: 'var(--subtle-text)', marginBottom: 6 }}>Required Hours: {cepRequirement.minimum_hours}</div>
+                    <div style={{ backgroundColor: 'var(--surface)', borderRadius: 8, height: 10, marginBottom: 6 }}>
+                      <div style={{ backgroundColor: cepProgress >= 100 ? 'var(--success)' : 'var(--primary)', height: '100%', borderRadius: 8, width: `${cepProgress}%`, transition: 'width 0.3s' }}></div>
                     </div>
-                    <div style={{ fontSize: 12, color: colors.subtleText }}>Deadline: {new Date(cepRequirement.deadline).toLocaleDateString()}</div>
+                    <div style={{ fontSize: 12, color: 'var(--subtle-text)' }}>Deadline: {new Date(cepRequirement.deadline).toLocaleDateString()}</div>
                   </>
                 ) : (
-                  <div style={{ fontSize: 14, color: colors.subtleText }}>No CEP requirement found.</div>
+                  <div style={{ fontSize: 14, color: 'var(--subtle-text)' }}>No CEP requirement found.</div>
                 )}
               </Card>
             </div>

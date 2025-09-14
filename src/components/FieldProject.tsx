@@ -115,6 +115,15 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
     }
   }, [role, studentUid])
 
+  // Fix: Implement fetchAllSubmissions for teacher view
+  const fetchAllSubmissions = async () => {
+    const { data, error } = await supabase
+      .from('field_project_submissions')
+      .select('*')
+      .order('uploaded_at', { ascending: false })
+    if (!error) setSubmissions(data || [])
+  }
+
   const fetchStudentSubmissions = async () => {
     if (!studentUid) return
 
@@ -129,25 +138,14 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
 
   const fetchStudentApproval = async () => {
     if (!studentUid) return
-
     const { data, error } = await supabase
       .from('field_project_approvals')
       .select('*')
       .eq('student_uid', studentUid)
       .single()
-
     if (!error && data) {
       setApprovals([data])
     }
-  }
-
-  const fetchAllSubmissions = async () => {
-    const { data, error } = await supabase
-      .from('field_project_submissions')
-      .select('*')
-      .order('uploaded_at', { ascending: false })
-
-    if (!error) setSubmissions(data || [])
   }
 
   const fetchAllApprovals = async () => {
@@ -163,8 +161,6 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
     const { data, error } = await supabase
       .from('students')
       .select('uid, name, class')
-      .order('class', { ascending: true })
-
     if (!error) {
       // Sort by class first, then by last 2 digits of UID
       const sortedStudents = (data || []).sort((a, b) => {
@@ -187,22 +183,18 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
     }
 
     setUploading(prev => ({ ...prev, [type]: true }))
-
     try {
-      const filePath = `field_project/${type}/${studentUid}_${Date.now()}_${file.name}`
-
+      // Compose filePath for upload
+      const filePath = `field_project/${studentUid}/${type}_${Date.now()}_${file.name}`
       const { error: storageError } = await supabase.storage
         .from('student-submissions')
         .upload(filePath, file)
-
       if (storageError) {
         throw new Error(`Upload failed: ${storageError.message}`)
       }
-
       const { data: { publicUrl } } = supabase.storage
         .from('student-submissions')
         .getPublicUrl(filePath)
-
       const { error: insertError } = await supabase
         .from('field_project_submissions')
         .insert([{
@@ -211,11 +203,9 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
           document_type: type,
           file_url: publicUrl,
         }])
-
       if (insertError) {
         throw new Error(`Failed to save submission: ${insertError.message}`)
       }
-
       alert(`${typeToLabel[type]} uploaded successfully!`)
       await fetchStudentSubmissions()
     } catch (error) {
@@ -239,18 +229,21 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
 
       if (submission?.file_url) {
         try {
+          // Extract filePath from public URL
           const url = new URL(submission.file_url)
-          const pathParts = url.pathname.split('/')
-          const filePath = pathParts.slice(pathParts.indexOf('field_project')).join('/')
-          await supabase.storage.from('student-submissions').remove([filePath])
+          const idx = url.pathname.indexOf('/field_project/')
+          const filePath = idx !== -1 ? url.pathname.substring(idx + 1) : ''
+          if (filePath) {
+            await supabase.storage.from('student-submissions').remove([filePath])
+          }
         } catch {
           // ignore storage cleanup failures
         }
       }
 
-      alert('Submission deleted successfully!')
-      if (role === 'student') await fetchStudentSubmissions()
-      else await fetchAllSubmissions()
+  alert('Submission deleted successfully!')
+  if (role === 'student') await fetchStudentSubmissions()
+  else await fetchAllSubmissions()
     } catch (error) {
       alert(`Delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
@@ -400,24 +393,23 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
   }
 
   if (role === 'student') {
-    const studentApproval = approvals[0]
-    
+    const studentApproval = approvals[0];
     return (
       <div style={{ maxWidth: 900, margin: '0 auto', padding: 20 }}>
-        <h1 style={{ fontSize: 24, marginBottom: 16, color: colors.text }}>Field Project Uploads</h1>
+        <h1 style={{ fontSize: 24, marginBottom: 16, color: 'var(--text)' }}>Field Project Uploads</h1>
 
         {studentApproval && studentApproval.approval_status !== 'pending' && (
-          <Card style={{ marginBottom: 20, padding: 16, backgroundColor: studentApproval.approval_status === 'approved' ? '#d4edda' : '#f8d7da' }}>
-            <div style={{ fontWeight: 600, color: studentApproval.approval_status === 'approved' ? '#155724' : '#721c24' }}>
+          <Card style={{ marginBottom: 20, padding: 16, backgroundColor: studentApproval.approval_status === 'approved' ? 'var(--success-bg)' : 'var(--danger-bg)' }}>
+            <div style={{ fontWeight: 600, color: studentApproval.approval_status === 'approved' ? 'var(--success)' : 'var(--danger)' }}>
               Overall Status: {studentApproval.approval_status.charAt(0).toUpperCase() + studentApproval.approval_status.slice(1)}
             </div>
             {studentApproval.credits_allotted > 0 && (
-              <div style={{ fontSize: 14, color: studentApproval.approval_status === 'approved' ? '#155724' : '#721c24', marginTop: 4 }}>
+              <div style={{ fontSize: 14, color: studentApproval.approval_status === 'approved' ? 'var(--success)' : 'var(--danger)', marginTop: 4 }}>
                 Total Credits: {studentApproval.credits_allotted}
               </div>
             )}
             {studentApproval.evaluation_notes && (
-              <div style={{ fontSize: 14, color: studentApproval.approval_status === 'approved' ? '#155724' : '#721c24', marginTop: 4 }}>
+              <div style={{ fontSize: 14, color: studentApproval.approval_status === 'approved' ? 'var(--success)' : 'var(--danger)', marginTop: 4 }}>
                 Notes: {studentApproval.evaluation_notes}
               </div>
             )}
@@ -426,24 +418,24 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
 
         <Section>
           {documentTypes.map(({ label, type, accept }) => {
-            const existingSubmission = getStudentSubmission(type)
-            const isUploading = uploading[type]
+            const existingSubmission = getStudentSubmission(type);
+            const isUploading = uploading[type];
             return (
               <Card key={type} style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ fontWeight: 600 }}>{label}</div>
-                  {existingSubmission && <div style={{ fontSize: 12, color: colors.subtleText }}>Uploaded on {new Date(existingSubmission.uploaded_at).toLocaleDateString()}</div>}
+                  {existingSubmission && <div style={{ fontSize: 12, color: 'var(--subtle-text)' }}>Uploaded on {new Date(existingSubmission.uploaded_at).toLocaleDateString()}</div>}
                 </div>
                 {existingSubmission ? (
                   <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                          {getPublicHref(existingSubmission.file_url) ? (
-                            <Button onClick={async () => {
-                              const url = await resolveSignedOrPublic(existingSubmission.file_url)
-                              window.open(url, '_blank')
-                            }}>View</Button>
-                          ) : (
-                            <Button variant="secondary" disabled>View</Button>
-                          )}
+                    {getPublicHref(existingSubmission.file_url) ? (
+                      <Button onClick={async () => {
+                        const url = await resolveSignedOrPublic(existingSubmission.file_url);
+                        window.open(url, '_blank');
+                      }}>View</Button>
+                    ) : (
+                      <Button variant="secondary" disabled>View</Button>
+                    )}
                     <Button variant="danger" onClick={() => handleDelete(existingSubmission.id, type)}>Delete</Button>
                   </div>
                 ) : (
@@ -452,17 +444,17 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
                       type="file"
                       accept={accept}
                       onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) handleFileUpload(file, type)
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, type);
                       }}
                       disabled={isUploading}
                       style={{ marginBottom: 8 }}
                     />
-                    {isUploading && <div style={{ color: colors.warning, fontSize: 12 }}>Uploading...</div>}
+                    {isUploading && <div style={{ color: 'var(--warning)', fontSize: 12 }}>Uploading...</div>}
                   </div>
                 )}
               </Card>
-            )
+            );
           })}
         </Section>
 
@@ -579,18 +571,7 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
                           Evaluate Student
                         </Button>
                       )}
-                      {approval && approval.approval_status !== 'pending' && (
-                        <div style={{ 
-                          padding: '4px 12px', 
-                          borderRadius: 4, 
-                          fontSize: 12, 
-                          fontWeight: 600,
-                          backgroundColor: approval.approval_status === 'approved' ? '#d4edda' : '#f8d7da',
-                          color: approval.approval_status === 'approved' ? '#155724' : '#721c24'
-                        }}>
-                          {approval.approval_status.charAt(0).toUpperCase() + approval.approval_status.slice(1)}
-                        </div>
-                      )}
+                      
                     </div>
                   </div>
                 </div>

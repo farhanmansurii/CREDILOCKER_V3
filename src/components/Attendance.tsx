@@ -244,38 +244,47 @@ export default function Attendance({ role }: AttendanceProps) {
 
     return (
       <div style={{ maxWidth: 800, margin: '0 auto', padding: 20 }}>
-        <h1 style={{ fontSize: 28, marginBottom: 20, color: colors.text }}>My Attendance</h1>
-
+        <h1 style={{ fontSize: 28, marginBottom: 20, color: 'var(--text)' }}>My Attendance</h1>
         <Section title="My Co-Curricular Activities">
           {studentActivities.length === 0 ? (
-            <p style={{ color: colors.subtleText }}>No activities assigned to your class.</p>
+            <p style={{ color: 'var(--subtle-text)' }}>No activities assigned to your class.</p>
           ) : (
             studentActivities.map(activity => {
               const attendance = getStudentAttendanceStatus(activity.id, user.id)
               return (
-                <Card key={activity.id} style={{ marginBottom: 16, padding: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                <Card key={activity.id} className="card mb-16" style={{ padding: 20 }}>
+                  <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: 18, color: colors.text }}>{activity.activity_name}</h3>
-                      <p style={{ margin: '4px 0', color: colors.subtleText }}>
+                      <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text)' }}>{activity.activity_name}</h3>
+                      <p style={{ margin: '4px 0', color: 'var(--subtle-text)' }}>
                         Date: {activity.date} | Time: {activity.time} | Venue: {activity.venue}
                       </p>
                     </div>
-                                         <div style={{ 
-                       padding: '4px 12px', 
-                       borderRadius: 4, 
-                       fontSize: 12, 
-                       fontWeight: 600,
-                       backgroundColor: attendance === 'present' ? '#d4edda' : 
-                                       attendance === 'absent' ? '#f8d7da' : '#e9ecef',
-                       color: attendance === 'present' ? '#155724' : 
-                              attendance === 'absent' ? '#721c24' : '#6c757d'
-                     }}>
-                       {attendance ? attendance.charAt(0).toUpperCase() + attendance.slice(1) : 'Not Marked'}
-                     </div>
+                    <div
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: 4,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        backgroundColor:
+                          attendance === 'present'
+                            ? 'var(--light-accent)'
+                            : attendance === 'absent'
+                            ? 'var(--danger-bg)' /* add this to your CSS as a light red background */
+                            : 'var(--surface)',
+                        color:
+                          attendance === 'present'
+                            ? 'var(--accent)'
+                            : attendance === 'absent'
+                            ? 'var(--danger)'
+                            : 'var(--subtle-text)',
+                      }}
+                    >
+                      {attendance ? attendance.charAt(0).toUpperCase() + attendance.slice(1) : 'Not Marked'}
+                    </div>
                   </div>
                   {activity.comments && (
-                    <p style={{ fontSize: 14, color: colors.subtleText, margin: 0 }}>
+                    <p style={{ fontSize: 14, color: 'var(--subtle-text)', margin: 0 }}>
                       <strong>Comments:</strong> {activity.comments}
                     </p>
                   )}
@@ -290,22 +299,22 @@ export default function Attendance({ role }: AttendanceProps) {
 
   // Teacher view
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 28, color: colors.text }}>Attendance Management</h1>
+  <div style={{ maxWidth: 1200, margin: '0 auto', padding: 20 }}>
+      <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h1 style={{ fontSize: 28, color: 'var(--text)' }}>Attendance Management</h1>
         {role === 'teacher' && (
-          <Button variant="success" onClick={generateAttendanceReport}>Generate Attendance Report</Button>
+          <Button variant="success" className="btn" onClick={generateAttendanceReport}>Generate Attendance Report</Button>
         )}
       </div>
 
       <Section title="Filters">
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div className="flex gap-12" style={{ flexWrap: 'wrap' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: colors.subtleText }}>Class</label>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: 'var(--subtle-text)' }}>Class</label>
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              style={{ padding: 8, border: `1px solid ${colors.border}`, borderRadius: 8 }}
+              style={{ padding: 8, border: '1px solid var(--border)', borderRadius: 8 }}
             >
               {selectedActivity?.assigned_class.map(cls => (
                 <option key={cls} value={cls}>{cls}</option>
@@ -313,48 +322,47 @@ export default function Attendance({ role }: AttendanceProps) {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: colors.subtleText }}>Activity</label>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 12, color: 'var(--subtle-text)' }}>Activity</label>
             <input
               type="text"
               value={filters.activity}
               onChange={(e) => setFilters(prev => ({ ...prev, activity: e.target.value }))}
               placeholder="Search activities..."
-              style={{ padding: 8, border: `1px solid ${colors.border}`, borderRadius: 8 }}
+              style={{ padding: 8, border: '1px solid var(--border)', borderRadius: 8 }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'end' }}>
-            <Button variant="secondary" onClick={() => setFilters({ class: '', activity: '' })}>Clear Filters</Button>
+          <div className="flex flex-center" style={{ alignItems: 'end' }}>
+            <Button variant="secondary" className="btn-secondary" onClick={() => setFilters({ class: '', activity: '' })}>Clear Filters</Button>
           </div>
         </div>
       </Section>
 
       <Section title="Activities">
         {filteredActivities.length === 0 ? (
-          <p style={{ color: colors.subtleText }}>No activities found matching the filters.</p>
+          <p style={{ color: 'var(--subtle-text)' }}>No activities found matching the filters.</p>
         ) : (
           filteredActivities.map(activity => {
             const activityAttendance = getAttendanceForActivity(activity.id)
             const totalStudents = students.filter(s => activity.assigned_class.includes(s.class)).length
             const markedCount = activityAttendance.length
-            
             return (
-              <Card key={activity.id} style={{ marginBottom: 16, padding: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <Card key={activity.id} className="card mb-16" style={{ padding: 20 }}>
+                <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 18, color: colors.text }}>{activity.activity_name}</h3>
-                    <p style={{ margin: '4px 0', color: colors.subtleText }}>
+                    <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text)' }}>{activity.activity_name}</h3>
+                    <p style={{ margin: '4px 0', color: 'var(--subtle-text)' }}>
                       Date: {activity.date} | Time: {activity.time} | Venue: {activity.venue}
                     </p>
-                    <p style={{ margin: '4px 0', color: colors.subtleText }}>
+                    <p style={{ margin: '4px 0', color: 'var(--subtle-text)' }}>
                       Classes: {activity.assigned_class.join(', ')} | Attendance: {markedCount}/{totalStudents}
                     </p>
                   </div>
-                  <Button variant="primary" onClick={() => openAttendanceModal(activity)}>
+                  <Button variant="primary" className="btn" onClick={() => openAttendanceModal(activity)}>
                     Mark Attendance
                   </Button>
                 </div>
                 {activity.comments && (
-                  <p style={{ fontSize: 14, color: colors.subtleText, margin: 0 }}>
+                  <p style={{ fontSize: 14, color: 'var(--subtle-text)', margin: 0 }}>
                     <strong>Comments:</strong> {activity.comments}
                   </p>
                 )}

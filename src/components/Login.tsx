@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { authenticateUser } from '../lib/auth'
 import { UserRole } from '../types'
+import { colors } from './UI'
 
 interface LoginProps {
   onLogin: (user: any, role: UserRole) => void
@@ -38,47 +39,52 @@ export default function Login({ onLogin, role, onBack }: LoginProps) {
   }
 
   return (
-    <div style={{ 
-      height: '100vh', 
-      backgroundColor: '#f0f0f0', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center' 
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: 'var(--bg)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16
     }}>
-      <div style={{ 
-        backgroundColor: 'white', 
-        padding: '30px', 
-        borderRadius: '5px', 
-        width: '400px',
-        border: '1px solid #ccc'
-      }}>
-        <div style={{ marginBottom: '20px' }}>
+      <div className="card" style={{ padding: 40, borderRadius: 16, width: 450, maxWidth: '100%' }}>
+        <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center' }}>
           <button
             onClick={onBack}
             style={{
               backgroundColor: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '16px',
-              marginRight: '10px'
+              fontSize: 16,
+              marginRight: 12,
+              color: 'var(--primary)',
+              fontWeight: 500
             }}
           >
             ← Back
           </button>
-          <span style={{ fontSize: '24px', fontWeight: 'bold' }}>CrediLocker</span>
+          <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--primary)' }}>
+            CrediLocker
+          </span>
         </div>
-        
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <p style={{ color: '#666' }}>
-            Sign in as <strong>{role}</strong>
+
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <p style={{ color: 'var(--subtle-text)', fontSize: 16 }}>
+            Sign in as <strong style={{ color: 'var(--primary)' }}>{role}</strong>
           </p>
         </div>
-        
+
         <form onSubmit={handleLogin}>
           {role === 'student' ? (
             <>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  fontSize: 14
+                }}>
                   Student ID
                 </label>
                 <input
@@ -87,17 +93,29 @@ export default function Login({ onLogin, role, onBack }: LoginProps) {
                   onChange={(e) => setUid(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '3px',
-                    fontSize: '16px'
+                    padding: '12px 16px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    backgroundColor: 'var(--card-bg)',
+                    color: 'var(--text)',
+                    transition: 'border-color 0.2s ease',
+                    outline: 'none'
                   }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                   placeholder="Enter your student ID"
                   required
                 />
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  fontSize: 14
+                }}>
                   Email
                 </label>
                 <input
@@ -106,11 +124,17 @@ export default function Login({ onLogin, role, onBack }: LoginProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '3px',
-                    fontSize: '16px'
+                    padding: '12px 16px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    backgroundColor: 'var(--card-bg)',
+                    color: 'var(--text)',
+                    transition: 'border-color 0.2s ease',
+                    outline: 'none'
                   }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                   placeholder="Enter your email"
                   required
                 />
@@ -118,8 +142,14 @@ export default function Login({ onLogin, role, onBack }: LoginProps) {
             </>
           ) : (
             <>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  fontSize: 14
+                }}>
                   Email
                 </label>
                 <input
@@ -128,17 +158,29 @@ export default function Login({ onLogin, role, onBack }: LoginProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '3px',
-                    fontSize: '16px'
+                    padding: '12px 16px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    backgroundColor: 'var(--card-bg)',
+                    color: 'var(--text)',
+                    transition: 'border-color 0.2s ease',
+                    outline: 'none'
                   }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                   placeholder="Enter your email"
                   required
                 />
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  fontSize: 14
+                }}>
                   Password
                 </label>
                 <input
@@ -147,11 +189,17 @@ export default function Login({ onLogin, role, onBack }: LoginProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '3px',
-                    fontSize: '16px'
+                    padding: '12px 16px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    backgroundColor: 'var(--card-bg)',
+                    color: 'var(--text)',
+                    transition: 'border-color 0.2s ease',
+                    outline: 'none'
                   }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
                   placeholder="Enter your password"
                   required
                 />
@@ -162,15 +210,11 @@ export default function Login({ onLogin, role, onBack }: LoginProps) {
           <button
             type="submit"
             disabled={loading}
+            className="btn"
             style={{
               width: '100%',
-              backgroundColor: '#007bff',
-              color: 'white',
-              padding: '12px',
-              border: 'none',
-              borderRadius: '3px',
-              fontSize: '16px',
-              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: 16,
+              fontWeight: 600,
               opacity: loading ? 0.6 : 1
             }}
           >

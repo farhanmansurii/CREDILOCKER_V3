@@ -207,7 +207,7 @@ export default function ManageClasses({ role }: ManageClassesProps) {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ fontSize: 28, margin: 0, color: colors.text }}>Management</h1>
+        <h1 style={{ fontSize: 28, margin: 0, color: 'var(--text)' }}>Management</h1>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <Button variant={!showTeachers ? 'primary' : 'secondary'} onClick={() => setShowTeachers(false)}>Students</Button>
           {role === 'teacher' && (
@@ -216,7 +216,7 @@ export default function ManageClasses({ role }: ManageClassesProps) {
         </div>
         {!showTeachers && (
         <Card style={{ padding: 12 }}>
-          <label style={{ fontSize: 14, color: colors.subtleText }}>
+          <label style={{ fontSize: 14, color: 'var(--subtle-text)' }}>
             Upload CSV
             <input
               type="file"
@@ -236,7 +236,7 @@ export default function ManageClasses({ role }: ManageClassesProps) {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: colors.subtleText }}>Class</label>
-            <select value={bulkClass} onChange={(e) => setBulkClass(e.target.value)} style={{ padding: 6, border: `1px solid ${colors.border}`, borderRadius: 8 }}>
+            <select value={bulkClass} onChange={(e) => setBulkClass(e.target.value)} style={{ padding: 6, border: '1px solid var(--border)', borderRadius: 8 }}>
               <option value="">Select Class</option>
               {CLASS_OPTIONS.map(c => (
                 <option key={c} value={c}>{c}</option>
@@ -244,8 +244,8 @@ export default function ManageClasses({ role }: ManageClassesProps) {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 12, color: colors.subtleText }}>New Semester</label>
-            <input type="number" value={bulkNewSemester} onChange={(e) => setBulkNewSemester(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g. 4" style={{ padding: 6, border: `1px solid ${colors.border}`, borderRadius: 8, width: 100 }} />
+            <label style={{ display: 'block', fontSize: 12, color: 'var(--subtle-text)' }}>New Semester</label>
+            <input type="number" value={bulkNewSemester} onChange={(e) => setBulkNewSemester(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g. 4" style={{ padding: 6, border: '1px solid var(--border)', borderRadius: 8, width: 100 }} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <Button onClick={bulkUpdateSemesterByClass} variant="primary">Update Semester</Button>
@@ -257,10 +257,10 @@ export default function ManageClasses({ role }: ManageClassesProps) {
 
       {!showTeachers && (
       <Section title="CSV Format">
-        <p style={{ margin: '8px 0', fontSize: 14, color: colors.text }}>
+  <p style={{ margin: '8px 0', fontSize: 14, color: 'var(--text)' }}>
           Include a header row with columns: <strong>uid,email,name,class,semester,phone_number</strong>. Valid classes: {CLASS_OPTIONS.join(', ')}. Semester is optional numeric. Example:
         </p>
-        <Card style={{ padding: 10, background: '#f8fafc' }}>
+  <Card style={{ padding: 10, background: 'var(--surface)' }}>
           <pre style={{ margin: 0, overflowX: 'auto' }}>
 uid,email,name,class,semester,phone_number
 24BIT001,alice@example.com,Alice Smith,FYIT,1,9876543210
@@ -274,7 +274,7 @@ uid,email,name,class,semester,phone_number
       <Section title="Filters">
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <label style={{ display: 'block', fontSize: 12, color: colors.subtleText }}>Class Filter</label>
+            <label style={{ display: 'block', fontSize: 12, color: 'var(--subtle-text)' }}>Class Filter</label>
             <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} style={{ padding: 6, border: `1px solid ${colors.border}`, borderRadius: 8 }}>
               <option value="">All</option>
               {CLASS_OPTIONS.map(c => (
@@ -284,7 +284,7 @@ uid,email,name,class,semester,phone_number
           </div>
           <div style={{ flex: 1, minWidth: 240 }}>
             <label style={{ display: 'block', fontSize: 12, color: colors.subtleText }}>Search</label>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by UID, name, or email" style={{ width: '100%', padding: 6, border: `1px solid ${colors.border}`, borderRadius: 8 }} />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by UID, name, or email" style={{ width: '100%', padding: 6, border: '1px solid var(--border)', borderRadius: 8 }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'end' }}>
             <Button variant="secondary" onClick={() => { setSearch(''); setClassFilter('') }}>Clear</Button>
@@ -295,7 +295,7 @@ uid,email,name,class,semester,phone_number
 
       {!showTeachers && (
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr 110px 90px 120px 180px', gap: 8, fontWeight: 600, paddingBottom: 10, borderBottom: `1px solid ${colors.border}` }}>
+  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr 110px 90px 120px 180px', gap: 8, fontWeight: 600, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
           <div>UID</div>
           <div>Name</div>
           <div>Email</div>
@@ -306,7 +306,7 @@ uid,email,name,class,semester,phone_number
         </div>
         {loading && <div style={{ padding: 12 }}>Loading...</div>}
         {!loading && filteredStudents.map(s => (
-          <div key={s.uid} style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr 110px 90px 120px 180px', gap: 8, padding: '10px 0', borderBottom: `1px solid ${colors.border}`, alignItems: 'center' }}>
+          <div key={s.uid} style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr 110px 90px 120px 180px', gap: 8, padding: '10px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
             <div style={{ fontFamily: 'monospace' }}>{s.uid}</div>
             {editingUid === s.uid ? (
               <>

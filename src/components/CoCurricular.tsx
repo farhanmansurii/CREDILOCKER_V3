@@ -189,7 +189,7 @@ export default function CoCurricular({ role }: CoCurricularProps) {
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ fontSize: 28, color: colors.text }}>Co-Curricular Activities</h1>
+          <h1 style={{ fontSize: 28, color: 'var(--text)' }}>Co-Curricular Activities</h1>
         {role === 'teacher' && (
           <Button
             onClick={() => {
@@ -226,6 +226,7 @@ export default function CoCurricular({ role }: CoCurricularProps) {
       {showForm && role === 'teacher' && (
         <Section>
           <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 18, color: colors.text }}>{newActivity.id ? 'Edit Activity' : 'Add New Activity'}</h3>
+            <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 18, color: 'var(--text)' }}>{newActivity.id ? 'Edit Activity' : 'Add New Activity'}</h3>
           <form onSubmit={handleAddOrUpdateActivity}>
             <div style={{ marginBottom: '10px' }}>
               <label>Activity Name</label>
@@ -234,7 +235,7 @@ export default function CoCurricular({ role }: CoCurricularProps) {
                 value={newActivity.title}
                 onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
                 required
-                style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}
+                style={{ width: '100%', padding: '8px', border: '1px solid var(--border)' }}
               />
             </div>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
@@ -245,7 +246,7 @@ export default function CoCurricular({ role }: CoCurricularProps) {
                   value={newActivity.date}
                   onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })}
                   required
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}
+                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border)' }}
                 />
               </div>
               <div style={{ flex: 1 }}>

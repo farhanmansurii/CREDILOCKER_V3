@@ -1,5 +1,6 @@
 import React from 'react'
 import { UserRole } from '../types'
+import { colors } from './UI'
 
 interface RoleSelectionProps {
   onRoleSelect: (role: UserRole) => void
@@ -7,39 +8,76 @@ interface RoleSelectionProps {
 
 export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
   return (
-    <div style={{ 
-      height: '100vh', 
-      backgroundColor: '#f0f0f0', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center' 
+    <div style={{
+      height: '100vh',
+      backgroundColor: 'var(--bg)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     }}>
-      <div style={{ 
-        backgroundColor: 'white', 
-        padding: '30px', 
-        borderRadius: '5px', 
-        width: '400px',
+      <div style={{
+        backgroundColor: 'var(--card-bg)',
+        padding: 40,
+        borderRadius: 16,
+        width: 450,
         textAlign: 'center',
-        border: '1px solid #ccc'
+        border: '1px solid var(--border)',
+        boxShadow: '0 8px 32px rgba(26,35,126,0.10)',
+        backdropFilter: 'blur(10px)'
       }}>
-        <h1 style={{ fontSize: '28px', marginBottom: '10px' }}>CrediLocker</h1>
-        <p style={{ color: '#666', marginBottom: '30px' }}>Choose your role</p>
-        
+        <h1 style={{
+          fontSize: 36,
+          fontWeight: 700,
+          marginBottom: 12,
+          color: 'var(--primary)'
+        }}>
+          CrediLocker
+        </h1>
+        <p style={{
+          color: 'var(--subtle-text)',
+          marginBottom: 40,
+          fontSize: 16
+        }}>
+          Choose your role to continue
+        </p>
+
         <button
           onClick={() => onRoleSelect('student')}
           style={{
             width: '100%',
-            padding: '20px',
-            marginBottom: '15px',
-            border: '2px solid #ddd',
-            borderRadius: '5px',
-            backgroundColor: 'white',
+            padding: 24,
+            marginBottom: 20,
+            border: '2px solid var(--border)',
+            borderRadius: 12,
+            backgroundColor: 'var(--card-bg)',
             cursor: 'pointer',
-            fontSize: '16px'
+            fontSize: 16,
+            transition: 'all 0.2s ease',
+            backdropFilter: 'blur(10px)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--light-accent)';
+            e.currentTarget.style.borderColor = 'var(--primary)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--card-bg)';
+            e.currentTarget.style.borderColor = 'var(--border)';
+            e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
-          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '5px' }}>Student</div>
-          <div style={{ color: '#666', fontSize: '14px' }}>
+          <div style={{
+            fontSize: 20,
+            fontWeight: 600,
+            marginBottom: 8,
+            color: 'var(--primary)'
+          }}>
+            Student
+          </div>
+          <div style={{
+            color: 'var(--subtle-text)',
+            fontSize: 14
+          }}>
             Track your projects and activities
           </div>
         </button>
@@ -48,16 +86,38 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
           onClick={() => onRoleSelect('teacher')}
           style={{
             width: '100%',
-            padding: '20px',
-            border: '2px solid #ddd',
-            borderRadius: '5px',
-            backgroundColor: 'white',
+            padding: 24,
+            border: '2px solid var(--border)',
+            borderRadius: 12,
+            backgroundColor: 'var(--card-bg)',
             cursor: 'pointer',
-            fontSize: '16px'
+            fontSize: 16,
+            transition: 'all 0.2s ease',
+            backdropFilter: 'blur(10px)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--light-accent)';
+            e.currentTarget.style.borderColor = 'var(--primary)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--card-bg)';
+            e.currentTarget.style.borderColor = 'var(--border)';
+            e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
-          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '5px' }}>Teacher</div>
-          <div style={{ color: '#666', fontSize: '14px' }}>
+          <div style={{
+            fontSize: 20,
+            fontWeight: 600,
+            marginBottom: 8,
+            color: 'var(--primary)'
+          }}>
+            Teacher
+          </div>
+          <div style={{
+            color: 'var(--subtle-text)',
+            fontSize: 14
+          }}>
             Manage projects and student activities
           </div>
         </button>

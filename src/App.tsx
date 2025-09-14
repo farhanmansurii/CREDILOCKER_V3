@@ -92,14 +92,14 @@ function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f0f0f0' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       <Navigation
         currentPage={currentPage}
         onPageChange={handlePageChange}
         user={user}
         onLogout={handleLogout}
       />
-      <main>
+      <main style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
         {renderCurrentPage()}
       </main>
     </div>
