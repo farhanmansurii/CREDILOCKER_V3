@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react'
 import { UserRole } from '../types'
 import { supabase } from '../lib/supabase'
 import { Section, Card, Button, Modal, colors } from './UI'
-import { exportAttendanceReport } from '../lib/excelExport'
+// Excel export functionality is now handled by ExcelReportButton component
+import ExcelReportButton from './ExcelReportButton'
 
 interface AttendanceProps {
   role: UserRole
@@ -62,7 +64,7 @@ export default function Attendance({ role }: AttendanceProps) {
       .from('co_curricular_activities')
       .select('*')
       .order('date', { ascending: false })
-    
+
     if (!error) setActivities(data || [])
   }
 
@@ -71,7 +73,7 @@ export default function Attendance({ role }: AttendanceProps) {
       .from('students')
       .select('uid, name, class')
       .order('class', { ascending: true })
-    
+
     if (!error) {
       // Sort by class first, then by last 2 digits of UID
       const sortedStudents = (data || []).sort((a, b) => {
@@ -92,7 +94,7 @@ export default function Attendance({ role }: AttendanceProps) {
       .from('co_curricular_attendance')
       .select('*')
       .order('marked_at', { ascending: false })
-    
+
     if (!error) setAttendanceRecords(data || [])
   }
 
@@ -103,7 +105,7 @@ export default function Attendance({ role }: AttendanceProps) {
       .select('*')
       .eq('student_uid', user.id)
       .order('marked_at', { ascending: false })
-    
+
     if (!error) setAttendanceRecords(data || [])
   }
 
@@ -167,7 +169,7 @@ export default function Attendance({ role }: AttendanceProps) {
       console.error('Attendance error:', error)
       alert('Failed to mark attendance')
     }
-  } 
+  }
 
   const getAttendanceForActivity = (activityId: number) => {
     return attendanceRecords.filter(record => record.activity_id === activityId)
@@ -188,46 +190,7 @@ export default function Attendance({ role }: AttendanceProps) {
     return student?.name || studentUid
   }
 
-  const generateAttendanceReport = () => {
-    const selectedClass = prompt('Enter class to generate attendance report for (e.g., FYIT, FYSD, SYIT, SYSD):')?.trim()
-    if (!selectedClass) return
-
-    // Activities relevant to the class (case-insensitive)
-    const classActivities = activities
-      .filter(a => Array.isArray(a.assigned_class) && a.assigned_class.some(cls => cls.toUpperCase() === selectedClass.toUpperCase()))
-      .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-
-    // Students in class (case-insensitive)
-    const classStudents = students.filter(s => s.class.toUpperCase() === selectedClass.toUpperCase())
-
-    // Header: uid, name, ...activity names, Total CC Points
-    const header = ['uid', 'name', ...classActivities.map(a => a.activity_name), 'Total CC Points']
-    const rows: any[][] = [header]
-
-    // Build quick lookup for attendance by (activity_id, student_uid)
-    const attendanceKey = (aid: number, uid: string) => `${aid}__${uid}`
-    const attendanceMap = new Map<string, 'present' | 'absent'>()
-    for (const rec of attendanceRecords) {
-      attendanceMap.set(attendanceKey(rec.activity_id, rec.student_uid), rec.attendance_status)
-    }
-
-    for (const student of classStudents) {
-      let totalPoints = 0
-      const row: any[] = [student.uid, student.name]
-      for (const act of classActivities) {
-        const status = attendanceMap.get(attendanceKey(act.id as number, student.uid))
-        const present = status === 'present' ? 1 : 0
-        row.push(present)
-        if (present === 1) {
-          totalPoints += typeof act.cc_points === 'number' ? act.cc_points : 0
-        }
-      }
-      row.push(totalPoints)
-      rows.push(row)
-    }
-
-    exportAttendanceReport(rows, `${selectedClass} Attendance`, `attendance_${selectedClass}.xlsx`)
-  }
+  // Report generation logic is now handled by ExcelReportButton component
 
   const filteredActivities = activities.filter(activity => {
     const matchesClass = !filters.class || activity.assigned_class.some(cls => cls.toUpperCase() === filters.class.toUpperCase())
@@ -238,7 +201,7 @@ export default function Attendance({ role }: AttendanceProps) {
   if (role === 'student') {
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
     const studentClass = user.data?.class
-    const studentActivities = activities.filter(activity => 
+    const studentActivities = activities.filter(activity =>
       activity.assigned_class.includes(studentClass)
     )
 
@@ -303,7 +266,14 @@ export default function Attendance({ role }: AttendanceProps) {
       <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h1 style={{ fontSize: 28, color: 'var(--text)' }}>Attendance Management</h1>
         {role === 'teacher' && (
-          <Button variant="success" className="btn" onClick={generateAttendanceReport}>Generate Attendance Report</Button>
+          <ExcelReportButton
+            reportType="attendance"
+            activities={activities}
+            students={students}
+            attendanceRecords={attendanceRecords}
+          >
+            Generate Attendance Report
+          </ExcelReportButton>
         )}
       </div>
 
@@ -398,13 +368,13 @@ export default function Attendance({ role }: AttendanceProps) {
                 .map(student => {
                   const currentStatus = getStudentAttendanceStatus(selectedActivity.id, student.uid)
                   return (
-                    <div key={student.uid} style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      padding: '12px', 
+                    <div key={student.uid} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '12px',
                       borderBottom: `1px solid ${colors.border}`,
-                      backgroundColor: currentStatus === 'present' ? '#d4edda' : 
+                      backgroundColor: currentStatus === 'present' ? '#d4edda' :
                                       currentStatus === 'absent' ? '#f8d7da' : 'transparent'
                     }}>
                       <div>
@@ -412,7 +382,7 @@ export default function Attendance({ role }: AttendanceProps) {
                         <div style={{ fontSize: 12, color: colors.subtleText }}>{student.uid} - {student.class}</div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <Button 
+                        <Button
                           variant={currentStatus === 'present' ? 'success' : 'secondary'}
                           onClick={() => markAttendance(student.uid, 'present')}
                           style={{ fontSize: 12, padding: '4px 8px' }}
@@ -420,7 +390,7 @@ export default function Attendance({ role }: AttendanceProps) {
                           Present
                         </Button>
 
-                        <Button 
+                        <Button
                           variant={currentStatus === 'absent' ? 'danger' : 'secondary'}
                           onClick={() => markAttendance(student.uid, 'absent')}
                           style={{ fontSize: 12, padding: '4px 8px' }}

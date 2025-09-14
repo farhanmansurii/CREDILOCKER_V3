@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { UserRole } from '../types'
 import { supabase } from '../lib/supabase'
-import { exportCEPReport, CEPReportRow } from '../lib/excelExport'
+// Excel export functionality is now handled by ExcelReportButton component
 import { Section, Card, Button, Modal, colors } from './UI'
+import ExcelReportButton from './ExcelReportButton'
 
 interface CommunityEngagementProps {
   role: UserRole
@@ -320,16 +321,16 @@ export default function CommunityEngagement({ role }: CommunityEngagementProps) 
 
   const handleEvaluateStudent = async () => {
     if (!selectedStudent) return
-    
+
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
     try {
       console.log('Evaluating CEP student:', selectedStudent.uid, selectedStudent.class)
-      
+
       // Calculate credits based on hours completed
       const studentSubmissions = submissions.filter(s => s.student_uid === selectedStudent.uid)
       const totalHours = studentSubmissions.reduce((sum, s) => sum + s.hours, 0)
       const requirement = requirements.find(r => r.assigned_class === selectedStudent.class)
-      
+
       let calculatedCredits = 0
       if (requirement && requirement.credits_config) {
         // Find the highest credit tier that the student qualifies for
@@ -348,7 +349,7 @@ export default function CommunityEngagement({ role }: CommunityEngagementProps) 
         .delete()
         .eq('student_uid', selectedStudent.uid)
         .eq('class', selectedStudent.class)
-      
+
       if (deleteError) {
         console.error('Delete error:', deleteError)
       }
@@ -365,12 +366,12 @@ export default function CommunityEngagement({ role }: CommunityEngagementProps) 
           evaluated_at: new Date().toISOString(),
           evaluation_notes: evaluationData.evaluation_notes
         }])
-      
+
       if (insertError) {
         console.error('Insert error:', insertError)
         throw insertError
       }
-      
+
       await fetchAllApprovals()
       setEvaluationModal(false)
       setSelectedStudent(null)
@@ -399,59 +400,7 @@ export default function CommunityEngagement({ role }: CommunityEngagementProps) 
 
 // ...existing code...
 
-const generateExcelReport = () => {
-  const selectedClass = prompt('Enter class to generate report for (e.g., FYIT, FYSD, SYIT, SYSD):')?.trim()
-  if (!selectedClass) return
-
-  // Find requirement for this class (case-insensitive)
-  const req = requirements.find(r => r.assigned_class.toUpperCase() === selectedClass.toUpperCase())
-  const creditConfig = req?.credits_config || []
-
-  // Group submissions by student_uid
-  const studentMap: Record<string, { name: string; class: string; hours: number; activities: number }> = {}
-  students
-    .filter(s => s.class.toUpperCase() === selectedClass.toUpperCase())
-    .forEach(s => {
-      const studentSubs = submissions.filter(sub => sub.student_uid === s.uid)
-      const hours = studentSubs.reduce((sum, sub) => sum + sub.hours, 0)
-      const activities = studentSubs.length
-      studentMap[s.uid] = { name: s.name, class: s.class, hours, activities }
-    })
-
-  // Calculate credits and status for each student
-  const reportData = Object.entries(studentMap).map(([uid, { name, class: studentClass, hours, activities }]) => {
-    // Find the highest credit tier that the student qualifies for
-    let credits = 0
-    if (creditConfig.length > 0) {
-      const sortedConfig = [...creditConfig].sort((a, b) => b.hours - a.hours)
-      for (const condition of sortedConfig) {
-        if (hours >= condition.hours) {
-          credits = condition.credits
-          break
-        }
-      }
-    }
-
-    // Get approval status
-    const approval = approvals.find(a => a.student_uid === uid && a.class.toUpperCase() === selectedClass.toUpperCase())
-    const status = approval?.approval_status || 'Pending'
-
-    return {
-      uid,
-      name,
-      class: studentClass,
-      hoursCompleted: hours,
-      activitiesSubmitted: activities,
-      creditsAllocated: credits,
-      status: status.charAt(0).toUpperCase() + status.slice(1),
-      minimumHours: req?.minimum_hours || 0,
-      progress: req ? `${Math.min((hours / req.minimum_hours) * 100, 100).toFixed(1)}%` : 'N/A'
-    }
-  })
-
-  // Export with correct columns
-  exportCEPReport(reportData)
-}
+// Report generation logic is now handled by ExcelReportButton component
 
   const getTotalHours = () => submissions.reduce((total, sub) => total + sub.hours, 0)
   const getRequirementForStudent = () => {
@@ -493,7 +442,13 @@ const generateExcelReport = () => {
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Community Engagement Program</h1>
-          <Button variant="success" onClick={generateExcelReport}>Download Excel Report</Button>
+          <ExcelReportButton
+            reportType="cep"
+            requirements={requirements}
+            submissions={submissions}
+            students={students}
+            approvals={approvals}
+          />
         </div>
 
         <Section>
@@ -524,7 +479,7 @@ const generateExcelReport = () => {
                     <input type="date" value={newRequirement.deadline} onChange={(e) => setNewRequirement({ ...newRequirement, deadline: e.target.value })} required style={{ padding: 8, border: '1px solid var(--border)', borderRadius: 8 }} />
                   </div>
                 </div>
-                
+
                 <div style={{ marginBottom: 12 }}>
                   <label>Credits Configuration (Flexible Hour-to-Credit Ratios)</label>
                   <div style={{ marginTop: 8 }}>
@@ -552,7 +507,7 @@ const generateExcelReport = () => {
                     <Button variant="secondary" onClick={addCreditsCondition} style={{ marginTop: 8 }}>Add Credit Condition</Button>
                   </div>
                 </div>
-                
+
                 <Button variant="success" type="submit">{editingRequirementId ? 'Update Requirements' : 'Set Requirements'}</Button>
               </form>
             </div>
@@ -631,7 +586,7 @@ const generateExcelReport = () => {
                 return newSet
               })
             }
-            
+
             return (
               <Card key={subs[0]?.student_uid} style={{ marginBottom: 12, padding: 20 }}>
                 <div style={{ borderBottom: `1px solid ${colors.border}`, paddingBottom: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

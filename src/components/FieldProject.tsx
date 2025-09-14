@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { UserRole } from '../types'
 import { supabase } from '../lib/supabase'
-import { exportFPReport, FPReportRow } from '../lib/excelExport'
+// Excel export functionality is now handled by ExcelReportButton component
 import { Section, Card, Button, Modal, colors } from './UI'
+import ExcelReportButton from './ExcelReportButton'
 
 interface FieldProjectProps {
   role: UserRole
@@ -251,18 +252,18 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
 
   const handleEvaluateStudent = async () => {
     if (!selectedStudent) return
-    
+
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
     try {
       console.log('Evaluating FP student:', selectedStudent.uid, selectedStudent.class)
-      
+
       // First, try to delete any existing record to avoid conflicts
       const { error: deleteError } = await supabase
         .from('field_project_approvals')
         .delete()
         .eq('student_uid', selectedStudent.uid)
         .eq('class', selectedStudent.class)
-      
+
       if (deleteError) {
         console.error('Delete error:', deleteError)
       }
@@ -279,12 +280,12 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
           evaluated_at: new Date().toISOString(),
           evaluation_notes: evaluationData.evaluation_notes
         }])
-      
+
       if (insertError) {
         console.error('Insert error:', insertError)
         throw insertError
       }
-      
+
       await fetchAllApprovals()
       setEvaluationModal(false)
       setSelectedStudent(null)
@@ -311,42 +312,7 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
     setEvaluationModal(true)
   }
 
-  const generateExcelReport = () => {
-    const selectedClass = prompt('Enter class to generate report for (e.g., FYIT, FYSD, SYIT, SYSD):')?.trim()
-    if (!selectedClass) return
-
-    const reportData: FPReportRow[] = Object.values(groupedSubmissions)
-      .filter(({ class: cls }) => cls.toUpperCase() === selectedClass.toUpperCase())
-      .map(({ student_uid, submissions: studentSubmissions }) => {
-      const student = students.find(s => s.uid === student_uid)
-      const approval = approvals.find(a => a.student_uid === student_uid && a.class.toUpperCase() === selectedClass.toUpperCase())
-
-      // Count documents submitted
-      const documentsSubmitted = {
-        completion_letter: studentSubmissions.some(s => s.document_type === 'completion_letter'),
-        outcome_form: studentSubmissions.some(s => s.document_type === 'outcome_form'),
-        feedback_form: studentSubmissions.some(s => s.document_type === 'feedback_form'),
-        video_presentation: studentSubmissions.some(s => s.document_type === 'video_presentation')
-      }
-
-      const documentsCount = Object.values(documentsSubmitted).filter(Boolean).length
-
-      return {
-        uid: student_uid,
-        name: student?.name || student_uid,
-        class: studentSubmissions[0]?.class || selectedClass,
-        status: approval?.approval_status || 'Pending',
-        credits: approval?.credits_allotted || 0,
-        documentsSubmitted: `${documentsCount}/4`,
-        completionLetter: documentsSubmitted.completion_letter ? 'Yes' : 'No',
-        outcomeForm: documentsSubmitted.outcome_form ? 'Yes' : 'No',
-        feedbackForm: documentsSubmitted.feedback_form ? 'Yes' : 'No',
-        videoPresentation: documentsSubmitted.video_presentation ? 'Yes' : 'No'
-      } as any
-    })
-
-    exportFPReport(reportData)
-  }
+  // Report generation logic is now handled by ExcelReportButton component
 
   const getStudentSubmission = (type: string) => submissions.find(sub => sub.document_type === type)
 
@@ -478,7 +444,12 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontSize: 24, color: colors.text }}>Field Project Submissions</h1>
-        <Button variant="success" onClick={generateExcelReport}>Download Excel Report</Button>
+        <ExcelReportButton
+          reportType="field_project"
+          submissions={submissions}
+          students={students}
+          approvals={approvals}
+        />
       </div>
 
       <Section title="Filters">
@@ -545,7 +516,7 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
             const student = students.find(s => s.uid === student_uid)
             const approval = getStudentApproval(student_uid, studentClass)
             const hasAllSubmissions = studentSubmissions.length === documentTypes.length
-            
+
             return (
               <Card key={`${student_uid}_${studentClass}`} style={{ marginBottom: 16 }}>
                 <div style={{ borderBottom: `1px solid ${colors.border}`, paddingBottom: 8, marginBottom: 10 }}>
@@ -564,14 +535,14 @@ export default function FieldProject({ role, studentUid = '', studentClass = '' 
                         {isExpanded ? 'Collapse' : 'Expand'} Submissions
                       </Button>
                       {hasAllSubmissions && (
-                        <Button 
-                          variant="primary" 
+                        <Button
+                          variant="primary"
                           onClick={() => openEvaluationModal({ uid: student_uid, name: student?.name || student_uid, class: studentClass })}
                         >
                           Evaluate Student
                         </Button>
                       )}
-                      
+
                     </div>
                   </div>
                 </div>

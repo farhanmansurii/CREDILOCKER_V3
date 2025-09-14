@@ -3,7 +3,8 @@ import { UserRole, User, Student } from '../types'
 import { supabase } from '../lib/supabase'
 import { Card, Section, colors } from './UI'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,CartesianGrid } from 'recharts'
-import { exportAttendanceReport as exportAttendanceSheet, exportCEPReport, exportFPReport } from '../lib/excelExport'
+// Excel export functionality is now handled by ExcelReportButton component
+import ExcelReportButton from './ExcelReportButton'
 
 interface LandingPageProps {
   role: UserRole
@@ -257,7 +258,7 @@ export default function LandingPage({ role, user }: LandingPageProps) {
       setAttendanceCountsBySelected({ present, absent })
     }
     run()
-    // eslint-disable-next-line
+
   }, [selectedActivityId])
 
     // Update FP status data when class changes
@@ -330,7 +331,7 @@ export default function LandingPage({ role, user }: LandingPageProps) {
         setFpStatusData({ pending, approved, rejected })
       }
       updateFPData()
-      // eslint-disable-next-line
+
     }, [selectedFPClass])
 
     // Update CEP status data when class changes
@@ -400,135 +401,14 @@ export default function LandingPage({ role, user }: LandingPageProps) {
         setCepStatusData({ pending, approved, rejected })
       }
       updateCEPData()
-      // eslint-disable-next-line
+
     }, [selectedCEPClass])
 
   // --- REPORT EXPORTS ---
-
-  const exportFieldProjectReport = async () => {
-    const selectedClass = prompt('Enter class to generate report for (e.g., FYIT, FYSD, SYIT, SYSD):')?.trim()
-    if (!selectedClass) return
-    const { data: students = [] } = await supabase.from('students').select('uid, name, class')
-    const { data: submissions = [] } = await supabase.from('field_project_submissions').select('id, student_uid, class, document_type, file_url, uploaded_at')
-    const { data: approvals = [] } = await supabase.from('field_project_approvals').select('student_uid, class, approval_status, marks_allotted, credits_allotted')
-    const groupedSubmissions = (submissions || [])
-      .filter((sub: any) => sub.class === selectedClass)
-      .reduce((acc: any, sub: any) => {
-        const key = `${sub.student_uid}_${sub.class}`
-        if (!acc[key]) acc[key] = { student_uid: sub.student_uid, class: sub.class, submissions: [] }
-        acc[key].submissions.push(sub)
-        return acc
-      }, {})
-    const reportData = Object.values(groupedSubmissions)
-      .map((group: any) => {
-        const student = (students || []).find((s: any) => s.uid === group.student_uid)
-        const approval = (approvals || []).find((a: any) => a.student_uid === group.student_uid && a.class === group.class)
-        return {
-          uid: group.student_uid,
-          name: student?.name || group.student_uid,
-          status: approval?.approval_status || 'Pending',
-          marks: approval?.marks_allotted || 0,
-          credits: approval?.credits_allotted || 0
-        }
-      })
-      .sort((a, b) => {
-        // Extract last 2 digits from UID and sort numerically
-        const aLastDigits = parseInt(a.uid.slice(-2)) || 0
-        const bLastDigits = parseInt(b.uid.slice(-2)) || 0
-        return aLastDigits - bLastDigits
-      })
-    exportFPReport(reportData)
-  }
-
-  const exportCEPReportLanding = async () => {
-    const selectedClass = prompt('Enter class to generate report for (e.g., FYIT, FYSD, SYIT, SYSD):')?.trim()
-    if (!selectedClass) return
-    const { data: requirements = [] } = await supabase.from('cep_requirements').select('*')
-    const { data: students = [] } = await supabase.from('students').select('uid, name, class')
-    const { data: submissions = [] } = await supabase.from('cep_submissions').select('student_uid, hours')
-    const req = (requirements || []).find((r: any) => r.assigned_class === selectedClass)
-    const creditConfig = req?.credits_config || []
-    const studentMap: Record<string, { name: string; hours: number }> = {}
-    ; (students || [])
-      .filter((s: any) => s.class === selectedClass)
-      .forEach((s: any) => {
-        const studentSubs = (submissions || []).filter((sub: any) => sub.student_uid === s.uid)
-        const hours = studentSubs.reduce((sum: number, sub: any) => sum + sub.hours, 0)
-        studentMap[s.uid] = { name: s.name, hours }
-      })
-    const reportData = Object.entries(studentMap).map(([uid, { name, hours }]) => {
-      let credits = 0
-      if (creditConfig.length > 0) {
-        const sortedConfig = [...creditConfig].sort((a: any, b: any) => b.hours - a.hours)
-        for (const condition of sortedConfig) {
-          if (hours >= condition.hours) {
-            credits = condition.credits
-            break
-          }
-        }
-      }
-      return {
-        uid,
-        name,
-        hoursCompleted: hours,
-        creditsAllocated: credits
-      }
-    })
-    exportCEPReport(reportData)
-  }
-
-  const exportAttendanceReportLanding = async () => {
-    const selectedClass = prompt('Enter class to generate attendance report for (e.g., FYIT, FYSD, SYIT, SYSD):')?.trim()
-    if (!selectedClass) return
-    const { data: activities = [] } = await supabase
-      .from('co_curricular_activities')
-      .select('*')
-    const { data: students = [] } = await supabase
-      .from('students')
-      .select('uid, name, class')
-    const { data: attendanceRecords = [] } = await supabase
-      .from('co_curricular_attendance')
-      .select('activity_id, student_uid, attendance_status')
-    const classActivities = (activities || [])
-      .filter((a: any) => Array.isArray(a.assigned_class) && a.assigned_class.includes(selectedClass))
-      .sort((a: any, b: any) => (a.date || '').localeCompare(b.date || ''))
-    const classStudents = (students || []).filter((s: any) => s.class === selectedClass)
-    const header = ['uid', 'name', ...classActivities.map((a: any) => a.activity_name), 'Total CC Points']
-    const rows: any[][] = [header]
-    const attendanceKey = (aid: number, uid: string) => `${aid}__${uid}`
-    const attendanceMap = new Map<string, 'present' | 'absent'>()
-    for (const rec of (attendanceRecords || [])) {
-      attendanceMap.set(attendanceKey(rec.activity_id, rec.student_uid), rec.attendance_status)
-    }
-    for (const student of classStudents) {
-      let totalPoints = 0
-      const row = [student.uid, student.name]
-      for (const activity of classActivities) {
-        const status = attendanceMap.get(attendanceKey(activity.id, student.uid))
-        if (status === 'present') {
-          row.push('Present')
-          totalPoints += activity.cc_points || 0
-        } else if (status === 'absent') {
-          row.push('Absent')
-        } else {
-          row.push('-')
-        }
-      }
-      row.push(totalPoints)
-      rows.push(row)
-    }
-    rows.sort((a, b) => {
-      if (a === header) return -1
-      if (b === header) return 1
-      const aLastDigits = parseInt(a[0].slice(-2)) || 0
-      const bLastDigits = parseInt(b[0].slice(-2)) || 0
-      return aLastDigits - bLastDigits
-    })
-    exportAttendanceSheet(rows, `${selectedClass} Attendance`, `attendance_${selectedClass}.xlsx`)
-  }
+  // All report generation logic is now handled by ExcelReportButton component
 
   // --- CHART DATA ---
-  
+
   // removed unused attendanceBarData
   const COLORS = [colors.success, colors.danger]
 
@@ -664,15 +544,15 @@ export default function LandingPage({ role, user }: LandingPageProps) {
           {/* Segment 2: Download Buttons */}
           <Card style={{ marginBottom: 32, padding: 24, textAlign: 'center' }}>
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-          <button onClick={exportFieldProjectReport} style={{ padding: '10px 20px', background: colors.primary, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-            Download Field Project Report
-          </button>
-          <button onClick={exportCEPReportLanding} style={{ padding: '10px 20px', background: colors.success, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-            Download CEP Report
-          </button>
-          <button onClick={exportAttendanceReportLanding} style={{ padding: '10px 20px', background: colors.primary, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-            Download Attendance Report
-          </button>
+              <ExcelReportButton reportType="field_project" variant="primary">
+                Download Field Project Report
+              </ExcelReportButton>
+              <ExcelReportButton reportType="cep" variant="success">
+                Download CEP Report
+              </ExcelReportButton>
+              <ExcelReportButton reportType="attendance" variant="primary">
+                Download Attendance Report
+              </ExcelReportButton>
             </div>
           </Card>
 
